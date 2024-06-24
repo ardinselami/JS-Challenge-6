@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menaxhuesi i Detyrave</title>
+  <style>
+    .highlight-current-date {
+      background-color: yellow;
+    }
+    #task-list {
+      margin-top: 20px;
+    }
+    #task-list li {
+      margin-bottom: 10px;
+    }
+    .remove-button {
+      margin-left: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="current-date"></h1>
+  <form id="task-form">
+    <label for="task-name">Emri i Detyrës:</label>
+    <input type="text" id="task-name" name="task-name" required>
+    <label for="task-time">Koha e Detyrës:</label>
+    <input type="time" id="task-time" name="task-time" required>
+    <label for="task-date">Data e Detyrës:</label>
+    <input type="date" id="task-date" name="task-date" required>
+    <button type="submit">Shto Detyrën</button>
+  </form>
+
+  <ul id="task-list"></ul>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+  
+  const taskForm = document.getElementById('task-form');
+  const taskNameInput = document.getElementById('task-name');
+  const taskTimeInput = document.getElementById('task-time');
+  const taskDateInput = document.getElementById('task-date');
+  const taskList = document.getElementById('task-list');
+  const currentDateElement = document.getElementById('current-date');
+
+  
+  function displayCurrentDate() {
+    const today = new Date().toLocaleDateString();
+    currentDateElement.textContent = `Data e Sotme: ${today}`;
+  }
+
+  displayCurrentDate();
+
+  
+  function loadTasks() {
+    const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    tasks.forEach(task => {
+      addTaskToDOM(task.name, task.time, task.date, false);
+    });
+    highlightCurrentDateTasks();
+  }
+
+  
+  function saveTasks() {
+    const tasks = [];
+    document.querySelectorAll('#task-list li').forEach(li => {
+      tasks.push({
+        name: li.querySelector('.task-name').textContent,
+        time: li.querySelector('.task-time').textContent,
+        date: li.querySelector('.task-date').textContent,
+      });
+    });
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
+
+  
+  function addTaskToDOM(name, time, date, save = true) {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span class="task-name">${name}</span> -
+      <span class="task-time">${time}</span> -
+      <span class="task-date">${date}</span>
+      <button class="remove-button">Fshij</button>
+    `;
+    taskList.appendChild(li);
+
+    if (save) {
+      saveTasks();
+    }
+
+    li.querySelector('.remove-button').addEventListener('click', () => {
+      li.remove();
+      saveTasks();
+    });
+
+    highlightCurrentDateTasks();
+  }
+
+  
+  taskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const name = taskNameInput.value.trim();
+    const time = taskTimeInput.value.trim();
+    const date = taskDateInput.value.trim();
+
+    if (!name || !time || !date) {
+      alert('Ju lutemi plotësoni të gjitha fushat e kërkuara.');
+      return;
+    }
+
+    addTaskToDOM(name, time, date);
+    taskNameInput.value = '';
+    taskTimeInput.value = '';
+    taskDateInput.value = '';
+  });
+
+  
+  function highlightCurrentDateTasks() {
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelectorAll('#task-list li').forEach(li => {
+      const taskDate = li.querySelector('.task-date').textContent;
+      if (taskDate === today) {
+        li.classList.add('highlight-current-date');
+      } else {
+        li.classList.remove('highlight-current-date');
+      }
+    });
+  }
+
+ 
+  loadTasks();
+});
+  </script>
+</body>
+</html>
